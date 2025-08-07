@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OctoDouble - Sudden Death</title>
+  <style>
+    /* Body & Background */
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: #a0d8f7; /* light blue */
+      overflow-x: hidden;
+      position: relative;
+      height: 100vh;
+
+      /* Center content vertically & horizontally */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Bubbles container & bubbles */
+    .bubble-container {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bubble {
+      position: absolute;
+      bottom: -100px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      animation-name: rise;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+    }
+    .bubble.small {
+      width: 20px;
+      height: 20px;
+      left: 10%;
+      animation-duration: 8s;
+      animation-delay: 0s;
+    }
+    .bubble.medium {
+      width: 35px;
+      height: 35px;
+      left: 40%;
+      animation-duration: 12s;
+      animation-delay: 3s;
+    }
+    .bubble.large {
+      width: 50px;
+      height: 50px;
+      left: 70%;
+      animation-duration: 15s;
+      animation-delay: 5s;
+    }
+    .bubble.xlarge {
+      width: 80px;
+      height: 80px;
+      left: 85%;
+      animation-duration: 18s;
+      animation-delay: 2s;
+    }
+    .bubble.xxlarge {
+      width: 100px;
+      height: 100px;
+      left: 25%;
+      animation-duration: 20s;
+      animation-delay: 7s;
+    }
+    .bubble.xxxlarge {
+      width: 120px;
+      height: 120px;
+      left: 55%;
+      animation-duration: 22s;
+      animation-delay: 9s;
+    }
+
+    @keyframes rise {
+      0% {
+        transform: translateY(0) translateX(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-110vh) translateX(20px);
+        opacity: 0;
+      }
+    }
+
+    /* Game box styling */
+    .game-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      max-width: 90%;
+      width: 500px;
+      margin: 0;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 18px;
+      width: 100%;
+      max-width: 200px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .feedback {
+      margin-top: 15px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .timer {
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+    #tipsSection, #graphSection, #historySection {
+      display: none;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      text-align: left;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    #tipsLink, #graphLink, #historyLink {
+      color: #007BFF;
+      text-decoration: underline;
+      cursor: pointer;
+      margin: 10px 5px 0 5px;
+      display: inline-block;
+    }
+    canvas {
+      max-width: 100%;
+      height: auto !important;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 600px) {
+      .game-box {
+        width: 90%;
+        padding: 20px;
+      }
+      input {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bubble-container">
+    <div class="bubble small"></div>
+    <div class="bubble medium"></div>
+    <div class="bubble large"></div>
+    <div class="bubble xlarge"></div>
+    <div class="bubble xxlarge"></div>
+    <div class="bubble xxxlarge"></div>
+  </div>
+
+  <div class="game-box">
+    <h1>🦑 OctoDouble</h1>
+    <div class="timer">Time Left: <span id="time">60</span>s</div>
+    <p>Current Number: <span id="currentNumber">?</span></p>
+    <input type="number" id="userInput" placeholder="Double it..." />
+    <div class="feedback" id="feedback"></div>
+    <p>Score: <span id="score">0</span></p>
+    <p>Best Score: <span id="bestScore">0</span></p>
+    <button onclick="startGame()">▶️ Start Game</button>
+
+    <p>
+      <span id="tipsLink" onclick="toggleTips()">💡 Tips on Doubling</span> |
+      <span id="graphLink" onclick="toggleGraph()">📈 Show/Hide Response Time Graph</span> |
+      <span id="historyLink" onclick="toggleHistory()">🕒 Show/Hide Game History</span>
+    </p>
+
+    <div id="tipsSection">
+      <h3>Tips for Doubling Numbers Quickly:</h3>
+      <ul>
+        <li><strong>Keep Doubling in Mind:</strong> Doubling is just multiplying by 2. Make sure you know your multiplication tables, especially for 2!</li>
+        <li><strong>Visualize Doubling:</strong> Start by thinking of small numbers like 1, 2, 4, 8, 16, and so on. This helps you quickly recognize the pattern.</li>
+        <li><strong>Break it Down:</strong> If you are unsure about a number, break it down into smaller chunks. For example, 32 → 16 → 8 → 4, and so on.</li>
+        <li><strong>Practice Mental Math:</strong> The more you practice, the faster you’ll become at visualizing and calculating doubles in your head.</li>
+        <li><strong>Use Reference Numbers:</strong> Remember common doubling results like 64 → 128, 128 → 256, etc. These will come in handy in the game!</li>
+      </ul>
+    </div>
+
+    <div id="graphSection">
+      <h3>Response Time per Answer (ms)</h3>
+      <canvas id="responseTimeChart" width="400" height="200"></canvas>
+    </div>
+
+    <div id="historySection"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let currentNumber;
+    let score = 0;
+    let timeLeft = 60;
+    let timerInterval;
+    let gameStarted = false;
+    let bestScore = localStorage.getItem('bestScore') ? parseInt(localStorage.getItem('bestScore')) : 0;
+    let history = localStorage.getItem('gameHistory') ? JSON.parse(localStorage.getItem('gameHistory')) : [];
+    let lastAnswerTime = null;
+    let responseTimes = [];
+
+    // Display best score from localStorage
+    document.getElementById("bestScore").textContent = bestScore;
+
+    const ctx = document.getElementById('responseTimeChart').getContext('2d');
+    const responseChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Response Time (ms)',
+          data: [],
+          fill: false,
+          borderColor: 'rgb(54, 162, 235)',
+          tension: 0.1
+        }]
+      },
+      options: {
+        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Answer Number'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Milliseconds'
+            },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    function startGame() {
+      score = 0;
+      timeLeft = 60;
+      gameStarted = true;
+      responseTimes = [];
+      lastAnswerTime = Date.now();
+      document.getElementById("score").textContent = score;
+      document.getElementById("feedback").textContent = "";
+      generateStartNumber();
+      document.getElementById("userInput").disabled = false;
+      document.getElementById("userInput").focus();
+      document.getElementById("time").textContent = timeLeft;
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("time").textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          endGame();
+        }
+      }, 1000);
+
+      // Hide sections by default
+      document.getElementById("tipsSection").style.display = "none";
+      document.getElementById("graphSection").style.display = "none";
+      document.getElementById("historySection").style.display = "none";
+
+      clearChart();
+    }
+
+    function generateStartNumber() {
+      currentNumber = Math.floor(Math.random() * 101);
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      document.getElementById("currentNumber").textContent = currentNumber;
+      document.getElementById("userInput").value = "";
+    }
+
+    function checkAnswer() {
+      if (!gameStarted || timeLeft <= 0) return;
+
+      const userAnswer = parseInt(document.getElementById("userInput").value);
+      const correctAnswer = currentNumber * 2;
+
+      if (userAnswer === correctAnswer) {
+        score++;
+        document.getElementById("feedback").textContent = "✅ Correct!";
+
+        // Record response time
+        let now = Date.now();
+        if (lastAnswerTime) {
+          responseTimes.push(now - lastAnswerTime);
+          updateChart();
+        }
+        lastAnswerTime = now;
+
+        currentNumber = correctAnswer;
+        document.getElementById("score").textContent = score;
+        updateDisplay();
+      } else {
+        document.getElementById("feedback").textContent = `❌ Wrong! Game Over!`;
+        gameOver();
+      }
+    }
+
+    function endGame() {
+      gameStarted = false;
+      document.getElementById("feedback").textContent = `⏰ Time's up! Final Score: ${score}`;
+      saveBestScore();
+      addToHistory(score);
+      document.getElementById("userInput").disabled = true;
+    }
+
+    function gameOver() {
+      gameStarted = false;
+      saveBestScore();
+      addToHistory(score);
+      document.getElementById("feedback").textContent = `❌ Game Over! Final Score: ${score}`;
+      document.getElementById("userInput").disabled = true;
+      clearInterval(timerInterval);
+    }
+
+    function saveBestScore() {
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('bestScore', bestScore);
+        document.getElementById("bestScore").textContent = bestScore;
+      }
+    }
+
+    function addToHistory(score) {
+      const date = new Date().toLocaleString();
+      history.unshift({score, date});
+      if (history.length > 5) history.pop();
+      localStorage.setItem('gameHistory', JSON.stringify(history));
+    }
+
+    function toggleTips() {
+      const tipsSection = document.getElementById("tipsSection");
+      tipsSection.style.display = (tipsSection.style.display === "block") ? "none" : "block";
+    }
+
+    function toggleGraph() {
+      const graphSection = document.getElementById("graphSection");
+      graphSection.style.display = (graphSection.style.display === "block") ? "none" : "block";
+    }
+
+    function toggleHistory() {
+      const historySection = document.getElementById("historySection");
+      if (historySection.style.display === "block") {
+        historySection.style.display = "none";
+      } else {
+        renderHistory();
+        historySection.style.display = "block";
+      }
+    }
+
+    function renderHistory() {
+      const historySection = document.getElementById("historySection");
+      if (history.length === 0) {
+        historySection.innerHTML = "<p>No game history yet.</p>";
+        return;
+      }
+      let html = "<h3>Last 5 Games</h3><ul>";
+      history.forEach(record => {
+        html += `<li>Score: ${record.score} - Played on: ${record.date}</li>`;
+      });
+      html += "</ul>";
+      historySection.innerHTML = html;
+    }
+
+    function updateChart() {
+      responseChart.data.labels = responseTimes.map((_, i) => i + 1);
+      responseChart.data.datasets[0].data = responseTimes;
+      responseChart.update();
+    }
+
+    function clearChart() {
+      responseTimes = [];
+      responseChart.data.labels = [];
+      responseChart.data.datasets[0].data = [];
+      responseChart.update();
+    }
+
+    // Listen for Enter key to check answer
+    document.getElementById("userInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        checkAnswer();
+      }
+    });
+  </script>
+</body>
+</html>
